@@ -2,6 +2,7 @@ from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import (
     Configuration,
     ContextLocalResource,
+    Factory,
     Resource,
 )
 
@@ -10,11 +11,13 @@ from src.infrastructure.db.elastic.engine import (
     ElasticContext,
     init_elastic_client,
 )
+from src.infrastructure.db.elastic.gateways.posts import ElasticSearchRepository
 from src.infrastructure.db.postgres.engine import (
     DbConnectionsHandler,
     SessionContext,
     init_db_engine,
 )
+from src.infrastructure.db.postgres.gateways.posts import PostRepository
 
 
 class InfrastructureContainer(DeclarativeContainer):
@@ -36,6 +39,17 @@ class InfrastructureContainer(DeclarativeContainer):
 
     elastic_connection = ContextLocalResource(
         ElasticContext,
-        client=elastic.provided.ELASTIC.CLIENT,
+        client=elastic.provided.elastic,
+        index_name=config.provided.ELASTIC.INDEX_NAME,
+    )
+
+    post_repository = Factory(
+        PostRepository,
+        session=db_connection,
+    )
+
+    search_repository = Factory(
+        ElasticSearchRepository,
+        elastic_connection=elastic_connection,
         index_name=config.provided.ELASTIC.INDEX_NAME,
     )
