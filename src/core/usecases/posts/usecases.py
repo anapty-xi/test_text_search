@@ -26,5 +26,5 @@ class SearchPosts(Base):
 
 class DeletePost(Base):
     async def execute(self, post_id: str) -> None:
-        await self.repository.delete_post(post_id)
-        await self.search_repository.delete_post(post_id)
+        if await self.repository.delete_post(post_id):
+            await self.search_repository.delete_post(post_id)
