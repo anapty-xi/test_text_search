@@ -2,7 +2,6 @@ import logging
 from collections.abc import AsyncGenerator
 from types import TracebackType
 
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncAttrs,
     AsyncEngine,
@@ -38,16 +37,6 @@ class DbConnectionsHandler:
             await self._engine.dispose()
             self._engine = None
             self._async_session = None
-
-    async def check_connection(self) -> bool:
-        """Проверяем, живо ли соединение, выполняя SELECT 1."""
-        try:
-            async with self.session_factory() as session:
-                await session.execute(text("SELECT 1"))
-            return True
-        except Exception as e:
-            logger.error(e)
-            return False
 
 
 class SessionContext:

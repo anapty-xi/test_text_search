@@ -1,0 +1,13 @@
+from typing import Protocol
+
+from src.core.entities.post import Post
+
+
+class RepositoryProtocol(Protocol):
+    async def get_posts_by_ids(self, ids: list[str]) -> list[Post]: ...
+    async def delete_post(self, post_id: str) -> None: ...
+
+
+class SearchRepositoryProtocol(Protocol):
+    async def search(self, query: str) -> list[str]: ...
+    async def delete_post(self, post_id: str) -> None: ...

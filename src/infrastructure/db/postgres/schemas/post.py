@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import ARRAY, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.infrastructure.db.engine import Base
+from src.infrastructure.db.postgres.engine import Base
 
 
 class Post(Base):
