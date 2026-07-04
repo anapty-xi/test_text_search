@@ -1,4 +1,5 @@
 import logging
+import uuid
 from typing import Annotated
 
 from dependency_injector.wiring import Closing, Provide, inject
@@ -43,7 +44,7 @@ async def search_posts(
 )
 @inject
 async def delete_post(
-    post_id: Annotated[str, Path(description="Post id")],
+    post_id: Annotated[uuid.UUID, Path(description="Post id")],
     usecase: Annotated[
         DeletePost, Depends(Closing[Provide[AppContainer.controllers.delete_post]])
     ],

@@ -85,7 +85,7 @@ async def _load_csv_to_postgres_if_empty(
     async with SessionContext(session_factory) as session:
         count_query = select(func.count()).select_from(Post)
         result = await session.execute(count_query)
-        count = result.scalar()
+        count = result.scalar() or 0
 
         if count > 0:
             logger.info("In Postgres there are already data. Skipping CSV import.")

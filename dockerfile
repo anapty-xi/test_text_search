@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 
 COPY pyproject.toml poetry.lock ./
 RUN pip install -U poetry && pip install poetry-plugin-export
-RUN poetry export ${POETRY_EXPORT_OPTIONS} --without-hashes -o requirements.txt && \
+RUN poetry export ${POETRY_EXPORT_OPTIONS} --with dev --without-hashes -o requirements.txt && \
     pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
 
 FROM python:3.12-slim AS runtime

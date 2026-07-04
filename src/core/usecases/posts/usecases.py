@@ -28,7 +28,8 @@ class Base:
 
 class SearchPosts(Base):
     """
-    Выполняет полнотекстовый поиск постов через Elasticsearch с последующей загрузкой из БД.
+    Выполняет полнотекстовый поиск постов через Elasticsearch с последующей загрузкой
+     из БД.
 
     Сначала запрашивает подходящие ID документов в Elasticsearch. Если ID найдены,
     выгружает полные объекты постов из Postgres.
@@ -39,11 +40,11 @@ class SearchPosts(Base):
         ids = await self.search_repository.search(query)
         if ids:
             logger.info(
-                f"Elasticsearch found {len(ids)} matching document IDs for query '{query}'"
+                f"Elasticsearch found {len(ids)} matching document IDs for '{query}'"
             )
             posts = await self.repository.get_posts_by_ids(ids)
             logger.info(
-                f"Successfully retrieved {len(posts)} posts from database for query '{query}'"
+                f"Successfully retrieved {len(posts)} posts from database for '{query}'"
             )
             return posts
         logger.warning(f"No posts matched the query '{query}' in Elasticsearch index.")
@@ -60,15 +61,11 @@ class DeletePost(Base):
 
     async def execute(self, post_id: str) -> None:
         if await self.repository.delete_post(post_id):
-            logger.info(
-                f"Post {post_id} successfully deleted from Postgres. Proceeding to delete from Elasticsearch index..."
-            )
+            logger.info(f"Post {post_id} successfully deleted from Postgres")
 
             await self.search_repository.delete_post(post_id)
             logger.info(
                 f"Post {post_id} successfully removed from Elasticsearch index."
             )
         else:
-            logger.warning(
-                f"Post {post_id} was not found in Postgres. Elasticsearch deletion skipped."
-            )
+            logger.warning(f"Post {post_id} was not found in Postgres")

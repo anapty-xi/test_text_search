@@ -1,6 +1,7 @@
 import logging
 from collections.abc import AsyncGenerator
 from types import TracebackType
+from typing import Any, cast
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from elasticsearch.helpers import async_bulk
@@ -50,11 +51,13 @@ class ElasticContext:
 async def _create_index_and_import_from_db(
     client: AsyncElasticsearch, db_session_factory: SessionContext
 ) -> None:
-    """Проверяет индекс Эластика. Если его нет — создает и наполняет данными из Postgres."""
+    """Проверяет индекс Эластика. Если его нет -
+    создает и наполняет данными из Postgres"""
 
     from src.infrastructure.db.postgres.schemas.post import Post
 
     index = config.ELASTIC.INDEX_NAME
+    exists: Any = False
     try:
         try:
             exists = await client.indices.exists(index=index)
@@ -85,7 +88,7 @@ async def _create_index_and_import_from_db(
         logger.info(f"Index '{index}' created")
 
         logger.info("Reading Postgres for Elastic index initialization...")
-        async with SessionContext(db_session_factory) as session:
+        async with SessionContext(cast(Any, db_session_factory)) as session:
             query = select(Post.id, Post.text)
             result = await session.execute(query)
             posts = result.all()
@@ -102,8 +105,12 @@ async def _create_index_and_import_from_db(
 
         if actions:
             success, errors = await async_bulk(client, actions)
+            errors_any = cast(Any, errors)
+            errors_count = (
+                len(errors_any) if isinstance(errors_any, list) else errors_any
+            )
             logger.info(
-                f"Imported {success} records into Elasticsearch with fresh IDs. Errors: {len(errors)}"
+                f"Imported {success} records into Elasticsearch. Errors: {errors_count}"
             )
 
             await client.indices.refresh(index=index)
@@ -119,9 +126,11 @@ async def _create_index_and_import_from_db(
 
 
 async def init_elastic_client(
-    hosts: str, db_session_factory: SessionContext
-) -> AsyncGenerator[ElasticConnectionsHandler]:
+    hosts: str, db_session_factory: Any
+) -> AsyncGenerator[ElasticConnectionsHandler, None]:
     elastic_handler = ElasticConnectionsHandler(hosts=hosts)
-    await _create_index_and_import_from_db(elastic_handler.client, db_session_factory)
+    await _create_index_and_import_from_db(
+        elastic_handler.client, cast(Any, db_session_factory)
+    )
     yield elastic_handler
     await elastic_handler.client_close()

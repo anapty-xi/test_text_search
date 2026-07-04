@@ -29,7 +29,7 @@ class ElasticSearchRepository:
 
             hits = response["hits"]["hits"]
             logger.info(
-                f"Found {len(hits)} hits for query '{query}' in index '{self._index_name}'"
+                f"Found {len(hits)} hits for '{query}' in index '{self._index_name}'"
             )
             return [hit["_id"] for hit in hits]
 
@@ -43,9 +43,7 @@ class ElasticSearchRepository:
                     id=post_id,
                 )
             except NotFoundError:
-                logger.warning(
-                    f"Post with id {post_id} not found in Elastic index, skipping delete"
-                )
+                logger.warning(f"Post with id {post_id} not found in Elastic index")
             try:
                 await asyncio.shield(
                     es_client.indices.refresh(

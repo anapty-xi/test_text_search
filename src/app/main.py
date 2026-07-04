@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator, cast
 
 from elasticsearch import ApiError, TransportError
 from fastapi.exceptions import RequestValidationError
@@ -35,11 +35,13 @@ def create_app() -> FastApiDi:
     container = AppContainer(config=config)
     app.container = container
 
-    app.add_exception_handler(BaseAPIException, api_exception_handler)
-    app.add_exception_handler(DBAPIError, db_error_handler)
-    app.add_exception_handler(TransportError, search_db_error_handler)
-    app.add_exception_handler(ApiError, search_db_error_handler)
-    app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    app.add_exception_handler(BaseAPIException, cast(Any, api_exception_handler))
+    app.add_exception_handler(DBAPIError, cast(Any, db_error_handler))
+    app.add_exception_handler(TransportError, cast(Any, search_db_error_handler))
+    app.add_exception_handler(ApiError, cast(Any, search_db_error_handler))
+    app.add_exception_handler(
+        RequestValidationError, cast(Any, validation_exception_handler)
+    )
 
     app.include_router(posts_router)
 

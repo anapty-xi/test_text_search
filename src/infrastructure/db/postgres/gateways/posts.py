@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.entities.post import Post
+from src.core.exceptions.posts import PostNotFound
 from src.infrastructure.db.postgres.schemas.post import Post as PostDB
 
 logger = logging.getLogger(__name__)
@@ -14,7 +15,8 @@ class PostRepository:
     """
     Репозиторий для управления сущностями постов в базе данных Postgres.
 
-    Предоставляет методы для чтения и удаления записей с использованием асинхронной сессии SQLAlchemy.
+    Предоставляет методы для чтения и удаления записей с использованием
+    асинхронной сессии SQLAlchemy.
     """
 
     def __init__(self, session: AsyncSession) -> None:
@@ -25,7 +27,8 @@ class PostRepository:
         Выгружает список постов из БД по их уникальным идентификаторам.
 
         Принимает список строковых ID, конвертирует их в объекты UUID, выполняет
-        SQL-запрос выборки (SELECT IN) и сортирует результат по дате создания в обратном порядке.
+        SQL-запрос выборки (SELECT IN) и сортирует результат по дате создания в
+        обратном порядке.
         """
         logger.info(f"Database query: Fetching posts for {len(ids)} string IDs.")
 
@@ -36,13 +39,11 @@ class PostRepository:
             .order_by(PostDB.created_date.desc())
         )
         db_posts = posts.scalars().all()
-        logger.info(
-            f"Database response: Found {len(db_posts)} rows in Postgres matching criteria."
-        )
+        logger.info(f"Database response: Found {len(db_posts)} rows in Postgres")
 
         validated_posts = [Post.model_validate(post) for post in db_posts]
         logger.debug(
-            f"Successfully validated {len(validated_posts)} posts into core domain models."
+            f"Successfully validated {len(validated_posts)} posts into core models"
         )
 
         return validated_posts
@@ -67,4 +68,4 @@ class PostRepository:
             logger.info(f"Post {post_id} successfully registered for deletion.")
             return True
         logger.warning(f"Post {post_id} not found in database. Nothing to delete.")
-        return False
+        raise PostNotFound()
