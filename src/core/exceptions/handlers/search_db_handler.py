@@ -15,7 +15,7 @@ async def search_db_error_handler(
     request: Request, exc: ApiError | TransportError
 ) -> JSONResponse:
     logger.exception(
-        "Ошибка поисковой базы данных: %s %s",
+        "Search DB exception: %s %s",
         request.method,
         request.url.path,
         extra={"method": request.method, "path": request.url.path},

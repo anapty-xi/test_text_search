@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 async def db_error_handler(request: Request, exc: DBAPIError) -> JSONResponse:
     logger.exception(
-        "Ошибка базы данных: %s %s",
+        "DB exception: %s %s",
         request.method,
         request.url.path,
         extra={"method": request.method, "path": request.url.path},

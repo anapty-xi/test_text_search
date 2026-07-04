@@ -9,8 +9,8 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from src.core.config import config as app_config
-from src.infrastructure.db.engine import Base
-from src.infrastructure.db.schemas.post import Post
+from src.infrastructure.db.postgres.engine import Base
+from src.infrastructure.db.postgres.schemas.post import Post
 
 _ = [Post]
 
@@ -26,7 +26,7 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 
-url = app_config.POSTGRES.DB_URL
+url = app_config.POSTGRES.URL
 
 
 def run_migrations_offline() -> None:

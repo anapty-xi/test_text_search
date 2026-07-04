@@ -1,7 +1,11 @@
+import csv
 import logging
+import os
 from collections.abc import AsyncGenerator
+from datetime import datetime
 from types import TracebackType
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import (
     AsyncAttrs,
     AsyncEngine,
@@ -65,7 +69,64 @@ class SessionContext:
             await self._session.close()
 
 
+async def _load_csv_to_postgres_if_empty(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    """Проверяет, пуста ли таблица в Postgres. Если да — заливает CSV."""
+    from src.infrastructure.db.postgres.schemas.post import Post
+
+    CSV_FILE_PATH = "posts.csv"
+    if not os.path.exists(CSV_FILE_PATH):
+        logger.warning(
+            f"File {CSV_FILE_PATH} not found. Skipping Postgres initialization."
+        )
+        return
+
+    async with SessionContext(session_factory) as session:
+        count_query = select(func.count()).select_from(Post)
+        result = await session.execute(count_query)
+        count = result.scalar()
+
+        if count > 0:
+            logger.info("In Postgres there are already data. Skipping CSV import.")
+            return
+
+        logger.info("Postgres is empty. Starting CSV import...")
+
+        documents_to_insert = []
+        with open(CSV_FILE_PATH, mode="r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                rubrics_list = (
+                    [r.strip() for r in row["rubrics"].strip("[]'\"").split(",")]
+                    if "rubrics" in row
+                    else []
+                )
+
+                created_date = datetime.now()
+                if "created_date" in row:
+                    try:
+                        created_date = datetime.fromisoformat(row["created_date"])
+                    except ValueError:
+                        pass
+
+                doc = Post(
+                    text=row.get("text", ""),
+                    rubrics=rubrics_list,
+                    created_date=created_date,
+                )
+                documents_to_insert.append(doc)
+
+        if documents_to_insert:
+            session.add_all(documents_to_insert)
+            await session.flush()
+            logger.info(
+                f"Successfully added {len(documents_to_insert)} records to Postgres."
+            )
+
+
 async def init_db_engine(db_url: str) -> AsyncGenerator[DbConnectionsHandler]:
     db_engine = DbConnectionsHandler(db_url=db_url)
+    await _load_csv_to_postgres_if_empty(db_engine.session_factory)
     yield db_engine
     await db_engine.engine_close()

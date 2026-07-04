@@ -16,7 +16,6 @@ class ControllersContainer(DeclarativeContainer):
         search_repository=infrastructure.search_repository,
     )
 
-    # UseCase удаления
     delete_post = Factory(
         DeletePost,
         repository=infrastructure.post_repository,

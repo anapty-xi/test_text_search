@@ -34,12 +34,13 @@ class InfrastructureContainer(DeclarativeContainer):
 
     elastic: Resource[ElasticConnectionsHandler] = Resource(
         init_elastic_client,
-        elastic_url=config.provided.ELASTIC.URL,
+        hosts=config.provided.ELASTIC.CLIENT,
+        db_session_factory=db.provided.session_factory,
     )
 
     elastic_connection = ContextLocalResource(
         ElasticContext,
-        client=elastic.provided.elastic,
+        client=elastic.provided.client,
         index_name=config.provided.ELASTIC.INDEX_NAME,
     )
 

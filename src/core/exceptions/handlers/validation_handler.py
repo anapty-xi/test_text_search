@@ -15,7 +15,7 @@ async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
     logger.warning(
-        "Ошибка валидации: %s %s",
+        "Validation exception: %s %s",
         request.method,
         request.url.path,
         extra={

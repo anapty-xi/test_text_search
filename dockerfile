@@ -39,4 +39,4 @@ COPY --chown=appuser:appuser . .
 
 USER appuser
 
-CMD ["uvicorn", "src.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD alembic upgrade head && uvicorn src.app.main:app --host 0.0.0.0 --port 8000 --reload

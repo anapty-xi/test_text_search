@@ -5,6 +5,7 @@ from elasticsearch import ApiError, TransportError
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.exc import DBAPIError
 
+from src.app.api.v1.posts import router as posts_router
 from src.app.system.resources import (
     AppContainer,
     FastApiDi,
@@ -39,6 +40,8 @@ def create_app() -> FastApiDi:
     app.add_exception_handler(TransportError, search_db_error_handler)
     app.add_exception_handler(ApiError, search_db_error_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
+
+    app.include_router(posts_router)
 
     return app
 
