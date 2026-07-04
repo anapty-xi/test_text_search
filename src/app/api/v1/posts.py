@@ -5,6 +5,7 @@ from typing import Annotated
 from dependency_injector.wiring import Closing, Provide, inject
 from fastapi import APIRouter, Depends, Path, Query
 
+from src.app.api.excpetions_autodocs import error_responses
 from src.app.api.v1.dto import PostOut
 from src.app.system.resources import AppContainer
 from src.core.entities.post import Post
@@ -18,6 +19,13 @@ router = APIRouter(prefix="/posts")
 @router.get(
     "/",
     response_model=list[PostOut],
+    responses=error_responses(
+        {
+            404: "No posts matched the query in Elasticsearch index.",
+            500: "Internal server error",
+            422: "Validation error",
+        }
+    ),
     status_code=200,
     description="Retrieving 20 posts containing the submitted text query",
 )
@@ -41,6 +49,18 @@ async def search_posts(
     response_model=dict[str, str],
     status_code=200,
     description="Delete post by id",
+    responses={
+        200: {
+            "content": {"application/json": {"example": {"message": "post deleted"}}}
+        },
+        **error_responses(
+            {
+                404: "Post not found.",
+                500: "Internal server error",
+                422: "Validation error",
+            }
+        ),
+    },
 )
 @inject
 async def delete_post(
